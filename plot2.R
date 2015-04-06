@@ -1,19 +1,24 @@
 plot2 <- function(){
-  ## File to read in working directory.
+  ## Load library
+  library(data.table)
+  
+  # File to read in working directory.
   
   ## Read header
-  header <- read.table("./household_power_consumption.txt", header = FALSE, sep = ";", nrows = 1, stringsAsFactors = FALSE)
-
+  header <- fread("./household_power_consumption.txt", nrows = 1, header = FALSE)
+  
   ## Read dataset dates 1/2/2007, 2/2/2007
-  classes <- c(rep("character", 2), rep("numeric", 7))
-  hpc <- read.table("./household_power_consumption.txt", header = FALSE, sep = ";", colClasses = classes, skip = 66637, nrows = 2880, stringsAsFactors = FALSE)
-
+  hpc <- fread("grep ^[1-2]/2/2007 ./household_power_consumption.txt", header = FALSE, na.strings = "?")
+  
   ## Set vars names from header
-  names(hpc) <- header
+  setnames(hpc, as.character(header))
 
   ## Add date/time var
-  dt <- paste(hpc$Date, hpc$Time)
-  hpc$datetime <- strptime(dt, "%d/%m/%Y %H:%M:%S")
+  Sys.setlocale(category = "LC_TIME", locale = "en_US.UTF-8")
+  dt <- paste(hpc[, Date], hpc[, Time])
+  dt_t <- as.POSIXct(strptime(dt, "%d/%m/%Y %H:%M:%S"))
+  hpc[, datetime := dt_t]
+  
   
   ## Devise plot
   png(file = "plot2.png")
